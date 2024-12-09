@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive URL Encoder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #282c34;
+            color: #fff;
+        }
+
+        .container {
+            background-color: #1f2229;
+            padding: 40px 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #555;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #007BFF;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .copy-btn {
+            background-color: #28a745;
+        }
+
+        .copy-btn:hover {
+            background-color: #218838;
+        }
+
+        .error, .success {
+            font-size: 14px;
+            margin-top: 10px;
+            color: red;
+            display: none;
+        }
+
+        .success {
+            color: #28a745;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007BFF;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Enter Your URL</h1>
+        
+        <input type="text" id="userInput" placeholder="Enter URL starting with https://" />
+        
+        <button onclick="redirectToPlay()">Submit</button>
+        
+        <button class="copy-btn" onclick="copyToClipboard()">Copy Encoded URL</button>
+        
+        <div id="error-message" class="error"></div>
+        <div id="success-message" class="success"></div>
+
+        <div class="loader" id="loader"></div>
+    </div>
+
+    <script>
+        function reverseAlphabetMapping(input) {
+            const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+            const reverseAlphabet = 'zyxwvutsrqponmlkjihgfedcba';
+            let encodedStr = '';
+
+            for (let char of input) {
+                if (alphabet.includes(char)) {
+                    const index = alphabet.indexOf(char);
+                    encodedStr += reverseAlphabet[index];
+                } else if (alphabet.includes(char.toLowerCase())) {
+                    const index = alphabet.indexOf(char.toLowerCase());
+                    encodedStr += reverseAlphabet[index].toUpperCase();
+                } else {
+                    // Non-alphabet characters remain unchanged
+                    encodedStr += char;
+                }
+            }
+
+            return encodedStr;
+        }
+
+        function displayMessage(message, type = 'error') {
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+
+if (type === 'error') {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+            } else if (type === 'success') {
+                successMessage.textContent = message;
+                successMessage.style.display = 'block';
+                errorMessage.style.display = 'none';
+            }
+        }
+
+        function copyToClipboard() {
+            const userInput = document.getElementById('userInput').value;
+            if (!userInput.startsWith('https://')) {
+                displayMessage('URL must start with "https://".', 'error');
+                return;
+            }
+
+            const urlWithoutHttps = userInput.replace('https://', '');
+            const encodedUrl = reverseAlphabetMapping(urlWithoutHttps);
+            const fullUrl = /play?q=${encodedUrl};
+
+            navigator.clipboard.writeText(fullUrl).then(() => {
+                displayMessage('Encoded URL copied to clipboard!', 'success');
+            });
+        }
+
+        function redirectToPlay() {
+            const userInput = document.getElementById('userInput').value;
+            const errorMessage = document.getElementById('error-message');
+            const loader = document.getElementById('loader');
+
+            if (!userInput.startsWith('https://')) {
+                displayMessage('URL must start with "https://".', 'error');
+                return;
+            }
+
+            displayMessage('', 'error');
+            loader.style.display = 'block';
+
+            // Remove "https://" from the input URL
+            const urlWithoutHttps = userInput.replace('https://', '');
+
+            // Apply the reverse alphabet mapping to the URL
+            const encodedUrl = reverseAlphabetMapping(urlWithoutHttps);
+
+            // Delay to show loader effect
+            setTimeout(() => {
+                loader.style.display = 'none';
+                window.location.href = /play?q=${encodedUrl};
+            }, 1500);
+        }
+    </script>
+
+</body>
+</html>
